@@ -1,45 +1,46 @@
-from datetime import datetime
-from tkinter.ttk import *
-import pandas as pd
+from datetime import datetime #pentru a lua data exacta din calendar
+from tkinter.ttk import * #pentru combobo - selectat indicatori
+import pandas as pd #pentru grafic, dataframe
 import requests
-import os
-import csv
-from tkinter import *
-from unidecode import unidecode
-from PIL import Image, ImageTk
-from tkcalendar import *
-import plotly.express as px
+import os #verificare de descarcare
+import csv #lucru cu csv
+from tkinter import * #interfata
+from unidecode import unidecode #diacritice
+from PIL import Image, ImageTk #imaginea de la grafic
+from tkcalendar import * #calendarul
+import plotly.express as px #formare grafic
 
 url = 'https://data.primariatm.ro/dataset/56ac723e-62af-443a-8811-554db730a961/resource/8fb1e450-7cc2-4a6b-bee0-1f88f206c56c/download/siguran-i-ordine-public.csv'
+#Justitie - Siguranta si ordine publica
 
-window = Tk()
+window = Tk() #creare fereastra
 window.title('Proiect LP')
-window.resizable(False, False)
+window.resizable(False, False) #Dezactivare maximizare fereastra
 window.geometry("1070x500")
 indicatori = list()
 indexes = list()
 
-def showCalendar(event):
+def showCalendar(event): # selectare indicatori - apar calendarele si butonul de selectare
     start_date.place(x=150, y=250)
     end_date.place(x=150, y=290)
     start_calendar.place(x=25, y=248)
     end_calendar.place(x=25, y=288)
     setare_date.place(x=25, y=325)
 
-meniu_indicatori = Combobox(window, width=40, font=("Arial", 12))
+meniu_indicatori = Combobox(window, width=40, font=("Arial", 12)) #casuta
 meniu_indicatori.set("Selectați indicatorul dorit")
-meniu_indicatori.bind('<<ComboboxSelected>>', showCalendar)
+meniu_indicatori.bind('<<ComboboxSelected>>', showCalendar) #face sa apara casutele de calendar cand se selecteaza un indicator
 meniu_indicatori.place(x=25, y=170)
 
 info = Label(text="Indicatori:", font=("Arial", 12)).place(x=25, y=130)
 
-start_date = DateEntry(window, selectmode="day", year=datetime.today().year, month=datetime.today().month, day=datetime.today().day)
-end_date = DateEntry(window, selectmode="day", year=datetime.today().year, month=datetime.today().month, day=datetime.today().day)
+start_date = DateEntry(window, selectmode="day", year=datetime.today().year, month=datetime.today().month, day=datetime.today().day) #calendar
+end_date = DateEntry(window, selectmode="day", year=datetime.today().year, month=datetime.today().month, day=datetime.today().day) #calendar
 start_calendar = Label(text="Data de început:", font=("Arial", 12))
 end_calendar = Label(text="Data de final:", font=("Arial", 12))
 year_range = Label(text="", font=("Arial", 12))
 
-def descarcare(event):
+def descarcare(event): #descarca datele din url si le pune in csv si dupa le pune in casuta de indicatori cu diacritice, iar daca fisierul e deja descarcat
     if not os.path.exists('out.csv'):
         response = requests.get(url)
         with open('out.csv', 'wb') as file:
@@ -66,10 +67,10 @@ def descarcare(event):
     else:
         download_status['text'] = "Fișierul există deja"
 
-year_start = ""
-year_end = ""
+year_start = "" #anul de inceput pe care il selectam
+year_end = "" #anul de sfarsit
 
-def find_year_data(year_start, year_end):
+def find_year_data(year_start, year_end): #citeste fisierul si cauta datele pentru anii selectati si le pune intr-o lista
     with open("out.csv") as f_in:
         csv_reader = csv.reader(f_in, delimiter=",")
         line_count = 0
@@ -82,19 +83,19 @@ def find_year_data(year_start, year_end):
                         indexes.append(index_start)
                         indexes.append(index_end)
                     line_count += 1
-                except ValueError:
+                except ValueError: #Daca anii nu sunt in fisier iti apare error si muta
                     year_range["text"] = "Anii introduși nu se regăsesc în fișier."
                     year_range.place(x=25, y=325)
                     setare_date.place(x=25, y=360)
             else:
                 line_count += 1
 
-def get_date(event):
+def get_date(event): #seteaza datele
     year_range["text"] = ""
     year_range.pack_forget()
     setare_date.place(x=25, y=335)
-    data_calendar1 = start_date.get_date()
-    year_start = data_calendar1.strftime('%Y')
+    data_calendar1 = start_date.get_date() #ia datele din calendar,
+    year_start = data_calendar1.strftime('%Y') #le formateaza si iti da numai anul
     data_calendar2 = end_date.get_date()
     year_end = data_calendar2.strftime('%Y')
     if year_range["text"] == "":
@@ -102,14 +103,14 @@ def get_date(event):
             year_range["text"] = "Anul de început trebuie să fie mai mic decât cel de sfârșit."
             year_range.place(x=25, y=325)
             setare_date.place(x=25, y=360)
-        find_year_data(year_start, year_end)
+        find_year_data(year_start, year_end) #iti cauta datele pentru anii selectati
         if year_range["text"] == "":
             export_data.place(x=150, y=335)
 
-setare_date = Button(window, text="Setare date", font=("Tahoma", 12), width=11, height=1)
+setare_date = Button(window, text="Setare date", font=("Tahoma", 12), width=11, height=1) #creare buton 'Setare Date'
 setare_date.bind('<Button-1>', get_date)
 
-if os.path.exists('out.csv'):
+if os.path.exists('out.csv'): # daca ai deja fisierul iti adauga indicatorii direct cu diacritice
     with open('out.csv', 'r') as f_in:
         csv_reader = csv.reader(f_in, delimiter=',')
         line_count = 0
@@ -127,14 +128,14 @@ if os.path.exists('out.csv'):
                 line_count += 1
                 meniu_indicatori["values"] = indicatori
 
-download = Button(window, text="Descărcare", font=('Tahoma', 12), width=11, height=1)
+download = Button(window, text="Descărcare", font=('Tahoma', 12), width=11, height=1) #Buton Descarcare
 download.bind('<Button-1>', descarcare)
 download.place(x=25, y=25)
 
-download_status = Label(text="", font=("Arial", 12))
+download_status = Label(text="", font=("Arial", 12)) #afiseaza test daca fisierul exista sau nu
 download_status.place(x=25, y=65)
 
-def export(event):
+def export(event): #creaza tabel cu anii si datele selectate in fuctie de indicator, face graficul, genereaza o poza, o redimensioneaza si o pune intr-un label
     data = pd.read_csv("out.csv")
     data = data[data['SIGURANȚĂ ȘI ORDINE PUBLICĂ'] == meniu_indicatori.get()]
     data = data.iloc[:, indexes[1]:indexes[0]+1]
@@ -150,7 +151,7 @@ def export(event):
     poza.image = new_image
     poza.place(x=430, y=25)
 
-export_data = Button(window, text="Afișare grafic", font=('Tahoma', 12), width=11, height=1)
-export_data.bind('<Button-1>', export)
+export_data = Button(window, text="Afișare grafic", font=('Tahoma', 12), width=11, height=1) #buton 'Afisare grafic'
+export_data.bind('<Button-1>', export) #plasare
 
 window.mainloop()
